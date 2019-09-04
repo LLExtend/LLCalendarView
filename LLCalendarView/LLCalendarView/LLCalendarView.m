@@ -14,43 +14,35 @@
 #define kScreenHeight UIScreen.mainScreen.bounds.size.height
 #define kLayoutScale(layout) ((layout)*(UIScreen.mainScreen.bounds.size.width/375.0f))
 
-#define AdjustContentInset(self,scrollView)\
-if (@available(iOS 11.0, *)) {\
-scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;\
-} else {\
-self.automaticallyAdjustsScrollViewInsets = NO;\
-}
-
 @interface LLCalendarMonthCollectionViewLayout : UICollectionViewFlowLayout
 
 @end
 
 @implementation LLCalendarMonthCollectionViewLayout
 
-
 - (instancetype)init {
     self = [super init];
     if (self) {
-        
+
         CGFloat minimumInteritemSpacing = 0.f;
         CGFloat leftInset = 4.f;
         CGFloat rightInset = 4.f;
-        
+
         CGFloat layoutWidth = (kScreenWidth - minimumInteritemSpacing * 6 - leftInset - rightInset);
 
         CGFloat itemWidth = floor((layoutWidth / 7));
         CGFloat itemHeight = kLayoutScale(60) ;
-        
+
         // 用来计算 layoutWidth / 7 无法除尽 造成误差问题
         NSInteger collectionViewLayoutWidth = (int)itemWidth * 7;
         // 计算得出误差 均分到leftInset、rightInset
         CGFloat margin = (layoutWidth - collectionViewLayoutWidth) / 2;
         leftInset += margin;
         rightInset += margin;
-        
+
         self.headerReferenceSize = CGSizeMake(kScreenWidth, 40);
         self.itemSize = CGSizeMake(itemWidth, itemHeight);
-        self.minimumLineSpacing = 3.0f;
+        self.minimumLineSpacing = 4.0f;
         self.minimumInteritemSpacing = minimumInteritemSpacing;
         self.sectionInset = UIEdgeInsetsMake(0, leftInset, 0, rightInset);
     }
@@ -58,24 +50,26 @@ self.automaticallyAdjustsScrollViewInsets = NO;\
     return self;
 }
 
+- (void)dealloc {
+    NSLog(@"%s", __func__);
+}
+
 - (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect {
 
     //UICollectionViewLayoutAttributes：可理解为collectionView中的item（包括cell和header、footer这些）的《结构信息》
     //截取到父类所返回的数组（里面放的是当前屏幕所能展示的item的结构信息）
     NSMutableArray *collectionViewLayoutAttributes = [[super layoutAttributesForElementsInRect:rect] mutableCopy];
-    UICollectionView * const collectionView = self.collectionView;
-    CGPoint const contentOffset = collectionView.contentOffset;
-    
+
     //创建存索引的数组，无符号（正整数），无序（不能通过下标取值），不可重复（重复的话会自动过滤）
     NSMutableIndexSet *missingSections = [NSMutableIndexSet indexSet];
-    
+
     //遍历collectionViewLayoutAttributes，得到一个当前屏幕中所有的section数组
     for (UICollectionViewLayoutAttributes *layoutAttributes in collectionViewLayoutAttributes) {
         if (layoutAttributes.representedElementCategory == UICollectionElementCategoryCell) {
             [missingSections addIndex:layoutAttributes.indexPath.section];
         }
     }
-    
+
     //遍历collectionViewLayoutAttributes，将当前屏幕中拥有的header的section从数组中移除，得到一个当前屏幕中没有header的section数组
     //正常情况下，随着手指往上移，header脱离屏幕会被系统回收而cell尚在，也会触发该方法
     for (UICollectionViewLayoutAttributes *layoutAttributes in collectionViewLayoutAttributes) {
@@ -96,7 +90,6 @@ self.automaticallyAdjustsScrollViewInsets = NO;\
             //将该header结构信息重新加入到collectionViewLayoutAttributes中去
             [collectionViewLayoutAttributes addObject:layoutAttributes];
         }
-        
     }];
 
     //遍历collectionViewLayoutAttributes，改变header结构信息中的参数，使它可以在当前section还没完全离开屏幕的时候一直显示
@@ -105,7 +98,7 @@ self.automaticallyAdjustsScrollViewInsets = NO;\
         if ([layoutAttributes.representedElementKind isEqualToString:UICollectionElementKindSectionHeader]) {
             //得到当前header所在分区的cell的数量
             NSInteger section = layoutAttributes.indexPath.section;
-            NSInteger numberOfItemsInSection = [collectionView numberOfItemsInSection:section];
+            NSInteger numberOfItemsInSection = [self.collectionView numberOfItemsInSection:section];
 
             NSIndexPath *firstObjectIndexPath = [NSIndexPath indexPathForItem:0 inSection:section];
             NSIndexPath *lastObjectIndexPath = [NSIndexPath indexPathForItem:MAX(0, (numberOfItemsInSection - 1)) inSection:section];
@@ -125,11 +118,9 @@ self.automaticallyAdjustsScrollViewInsets = NO;\
 
             CGFloat headerHeight = CGRectGetHeight(layoutAttributes.frame);
             CGPoint origin = layoutAttributes.frame.origin;
+            CGFloat tempContentOffset = MAX((self.collectionView.contentOffset.y + self.collectionView.contentInset.top), (CGRectGetMinY(firstObjectAttrs.frame) - headerHeight));
             origin.y = MIN(
-                           MAX(
-                               contentOffset.y + collectionView.contentInset.top,
-                               (CGRectGetMinY(firstObjectAttrs.frame) - headerHeight)
-                               ),
+                           tempContentOffset,
                            (CGRectGetMaxY(lastObjectAttrs.frame) - headerHeight)
                            );
 
@@ -153,7 +144,8 @@ self.automaticallyAdjustsScrollViewInsets = NO;\
 
 @interface LLCalendarMonthCollectionSectionHeader : UICollectionReusableView
 
-@property (nonatomic ,copy) NSString *text;
+- (void)setConfiguration:(LLCalendarViewConfiguration *)configuration
+                dayModel:(LLCalendarMonthModel *)monthModel;
 
 @end
 
@@ -173,8 +165,12 @@ self.automaticallyAdjustsScrollViewInsets = NO;\
     return self;
 }
 
-- (void)setText:(NSString *)text {
-    _titleLabel.text = text;
+- (void)setConfiguration:(LLCalendarViewConfiguration *)configuration
+                dayModel:(LLCalendarMonthModel *)monthModel {
+    _titleLabel.textColor = configuration.sectionMonthTextColor ?:[UIColor blackColor];
+    _titleLabel.backgroundColor = configuration.sectionMonthBackgroundColor ?:[UIColor groupTableViewBackgroundColor];
+    _titleLabel.font = configuration.sectionMonthTextFont ?:[UIFont systemFontOfSize:18];
+    _titleLabel.text = [NSString stringWithFormat:@"%d年 %d月",(int)monthModel.year,(int)monthModel.month];
 }
 
 - (void)layoutSubviews {
@@ -187,15 +183,13 @@ self.automaticallyAdjustsScrollViewInsets = NO;\
 
 @interface LLCalendarCollectionCell : UICollectionViewCell
 
-//@property (nonatomic ,strong) LLCalendarDayModel *dayModel;
-//@property (nonatomic ,strong) LLCalendarViewConfiguration *configuration;
-
 - (void)setConfiguration:(LLCalendarViewConfiguration *)configuration
                 dayModel:(LLCalendarDayModel *)dayModel;
 
 @end
 
 @implementation LLCalendarCollectionCell {
+    UIView *_contentBackgroundView;
     UILabel *_titleLabel;
 }
 
@@ -205,7 +199,7 @@ self.automaticallyAdjustsScrollViewInsets = NO;\
         [_titleLabel setFont:[UIFont systemFontOfSize:15]];
         [_titleLabel setBackgroundColor:[UIColor clearColor]];
         [_titleLabel setTextAlignment:NSTextAlignmentCenter];
-        [self addSubview:_titleLabel];
+        [self.contentView addSubview:_titleLabel];
         [_titleLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
     }
     return self;
@@ -224,9 +218,11 @@ self.automaticallyAdjustsScrollViewInsets = NO;\
     switch (dayOfWeek) {
         case LLCalendarDayOfWeekSunday:
             _titleLabel.textColor = configuration.weekendTextColor ?:UIColor.orangeColor;
+            _titleLabel.font = configuration.weekendTextFont ?:[UIFont systemFontOfSize:15];
             break;
         case LLCalendarDayOfWeekSaturday:
             _titleLabel.textColor = configuration.weekendTextColor ?:UIColor.orangeColor;
+            _titleLabel.font = configuration.weekendTextFont ?:[UIFont systemFontOfSize:15];
             break;
         case LLCalendarDayOfWeekUnknown:
             _titleLabel.text = @"";
@@ -383,12 +379,10 @@ static NSString const *endIndexPathKey = @"endIndexPathKey";
            viewForSupplementaryElementOfKind:(NSString *)kind
                                  atIndexPath:(NSIndexPath *)indexPath {
     UICollectionReusableView *reusableview = nil;
-
     if (kind == UICollectionElementKindSectionHeader) {
-
         LLCalendarMonthModel *monthModel = self.dataArray[indexPath.section];
         LLCalendarMonthCollectionSectionHeader *monthHeader = [collectionView dequeueReusableSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:@"LLCalendarMonthCollectionSectionHeader" forIndexPath:indexPath];
-        monthHeader.text = [NSString stringWithFormat:@"%d年 %d月",(int)monthModel.year,(int)monthModel.month];//@"日期";
+        [monthHeader setConfiguration:self.configuration dayModel:monthModel];
         monthHeader.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.8f];
         reusableview = monthHeader;
     }
@@ -417,6 +411,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     _configuration = configuration;
     
     [self dataSourceProcessor];
+    
+    [self weekDayViewSubViewPropertySetting];
 }
 
 #pragma mark - private method
@@ -556,6 +552,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         [self.collectionView reloadItemsAtIndexPaths:@[singleIndexPath,indexPath]];
         
         self.selectedDates = @[dayModel];
+        if (self.finishSelectBlock) {
+            self.finishSelectBlock(self.selectedDates);
+        }
     } else {
         _isAlreadyExistStart = YES;
         _recordIndexPaths[startIndexPathKey] = indexPath;
@@ -563,6 +562,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         [self.collectionView reloadItemsAtIndexPaths:@[indexPath]];
         
         self.selectedDates = @[dayModel];
+        if (self.finishSelectBlock) {
+            self.finishSelectBlock(self.selectedDates);
+        }
     }
 }
 
@@ -666,6 +668,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         [self.collectionView reloadData];
         
         self.selectedDates = @[startDayModel ,dayModel];
+        if (self.finishSelectBlock) {
+            self.finishSelectBlock(self.selectedDates);
+        }
         
     }
     else if (!_isAlreadyExistStart && !_isAlreadyExistEnd ) {
@@ -676,6 +681,26 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         _recordIndexPaths[startIndexPathKey] = indexPath;
         [self.collectionView reloadItemsAtIndexPaths:@[indexPath]];
     }
+}
+
+// weekDay subview 属性设置
+- (void)weekDayViewSubViewPropertySetting {
+    __weak typeof(self) weakSelf = self;
+    [self.weekDayView.subviews enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        
+        if ([obj isKindOfClass:[UILabel class]]) {
+            UILabel *label = (UILabel *)obj;
+            if (idx == 0 ||
+                idx == 6) {
+                label.textColor = strongSelf.configuration.weekendTitleTextColor ?:[UIColor colorWithRed:51/255.0f green:51/255.0f blue:51/255.0f alpha:1];
+                label.font = strongSelf.configuration.weekendTitleTextFont ?:[UIFont systemFontOfSize:kLayoutScale(15)];
+            } else {
+                label.textColor = strongSelf.configuration.weekDayTitleTextColor ?:[UIColor colorWithRed:51/255.0f green:51/255.0f blue:51/255.0f alpha:1];
+                label.font = strongSelf.configuration.weekDayTitleTextFont ?:[UIFont systemFontOfSize:kLayoutScale(15)];
+            }
+        }
+    }];
 }
 
 // 根据indexPatch 获得 LLCalendarDayModel 对象

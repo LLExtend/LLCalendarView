@@ -37,29 +37,21 @@
     configuration.endCountType = self.CalculateSegmentControl.selectedSegmentIndex==0 ? LLEndCountTypeDay :LLEndCountTypeMonth;
     configuration.isOpenSingleSelect = !self.SelectTypeSegmentControl.selectedSegmentIndex;
     
-    configuration.selectedBackgroundColor = [UIColor colorWithRed:42/255.0 green:134/255.0 blue:232/255.0 alpha:1];
     configuration.weekendTextColor = UIColor.orangeColor;
+    configuration.selectedBackgroundColor = [UIColor colorWithRed:42/255.0 green:134/255.0 blue:232/255.0 alpha:1];
     configuration.selectedMiddleBackgroundColor = [UIColor colorWithRed:.9 green:.9 blue:.9 alpha:1];
-    vc.configuration = configuration;
     
+    // 周一-周日 字体颜色设置
+    configuration.weekDayTitleTextColor = UIColor.blackColor;
+    configuration.weekDayTitleTextFont = [UIFont systemFontOfSize:16];
+    configuration.weekendTitleTextColor = UIColor.orangeColor;
+    configuration.weekendTitleTextFont = [UIFont systemFontOfSize:16];
+    
+    vc.configuration = configuration;
     
     UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:vc];
     [self presentViewController:nav animated:YES completion:nil];
     
-    
-    
-//    LLCalendarView *calendarView = [[LLCalendarView alloc] initWithFrame:UIScreen.mainScreen.bounds];
-//    [self.view addSubview:calendarView];
-//
-//    LLCalendarViewConfiguration *configuration = LLCalendarViewConfiguration.new;
-//    configuration.endCount = 365;
-//    configuration.endCountType = LLEndCountTypeDay;
-//    configuration.isOpenSingleSelect = NO;
-//
-//    configuration.selectedBackgroundColor = [UIColor colorWithRed:42/255.0 green:134/255.0 blue:232/255.0 alpha:1];
-//    configuration.weekendTextColor = UIColor.orangeColor;
-//    configuration.selectedMiddleBackgroundColor = [UIColor colorWithRed:.9 green:.9 blue:.9 alpha:1];
-//    calendarView.configuration = configuration;
 }
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {

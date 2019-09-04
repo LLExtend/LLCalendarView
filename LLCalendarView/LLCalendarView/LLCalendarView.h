@@ -24,8 +24,6 @@ typedef NS_ENUM(NSInteger ,LLEndCountType) {
 /**
  @required
  日历结束日期数量
- 若按月份计算最大支持36月
- 若按天计算最大支持365
  */
 @property (nonatomic ,assign) NSInteger endCount;
 
@@ -37,31 +35,13 @@ typedef NS_ENUM(NSInteger ,LLEndCountType) {
 
 /**
  @optional
- 是否开启 选中日期后自动dismiss defalut is NO
- */
-@property (nonatomic ,assign) BOOL isOpenSelectedAutoDismiss;
-
-/**
- @optional
  是否开启单选 defalut is NO|双选 YES|单选
  */
 @property (nonatomic ,assign) BOOL isOpenSingleSelect;
 
 /**
  @optional
- 周六日字体颜色
- */
-@property (nonatomic ,strong) UIColor *weekendTextColor;
-
-/**
- @optional
- 周一至周五字体颜色
- */
-@property (nonatomic ,strong) UIColor *weeknormalTextColor;
-
-/**
- @optional
- 选中背景色
+ 选中日期背景色
  */
 @property (nonatomic ,strong) UIColor *selectedBackgroundColor;
 
@@ -73,19 +53,31 @@ typedef NS_ENUM(NSInteger ,LLEndCountType) {
 
 /**
  @optional
- 无点击日期字体颜色
+ 不可点击状态日期字体颜色
  */
 @property (nonatomic ,strong) UIColor *untouchTextColor;
 
 /**
  @optional
- 周六日字体
+ 周六日日期字体颜色
+ */
+@property (nonatomic ,strong) UIColor *weekendTextColor;
+
+/**
+ @optional
+ 周一至周五日期字体颜色
+ */
+@property (nonatomic ,strong) UIColor *weeknormalTextColor;
+
+/**
+ @optional
+ 周六日日期字体
  */
 @property (nonatomic ,strong) UIFont *weekendTextFont;
 
 /**
  @optional
- 周一至周五字体
+ 周一至周日期五字体
  */
 @property (nonatomic ,strong) UIFont *weeknormalTextFont;
 
@@ -94,6 +86,54 @@ typedef NS_ENUM(NSInteger ,LLEndCountType) {
  日历中 日期字体
  */
 @property (nonatomic ,strong) UIFont *weekDayTextFont;
+
+/************************ 👉section View 属性设置👈 ************************/
+/**
+ @optional
+ 悬停section View 字体颜色
+ */
+@property (nonatomic ,strong) UIColor *sectionMonthTextColor;
+
+/**
+ @optional
+ 悬停section View 背景颜色
+ */
+@property (nonatomic ,strong) UIColor *sectionMonthBackgroundColor;
+
+/**
+ @optional
+ 悬停section View 字体
+ */
+@property (nonatomic ,strong) UIFont *sectionMonthTextFont;
+
+/************************ 👉weekDayView 属性设置👈 ************************/
+/**
+ @optional
+ @[@"日",@"一",@"二",@"三",@"四",@"五",@"六"];
+ 周六日 字体颜色
+ */
+@property (nonatomic ,strong) UIColor *weekendTitleTextColor;
+
+/**
+ @optional
+ @[@"日",@"一",@"二",@"三",@"四",@"五",@"六"];
+ 周一-周五 字体颜色
+ */
+@property (nonatomic ,strong) UIColor *weekDayTitleTextColor;
+
+/**
+ @optional
+ @[@"日",@"一",@"二",@"三",@"四",@"五",@"六"];
+ 周六日 字体
+ */
+@property (nonatomic ,strong) UIFont *weekendTitleTextFont;
+
+/**
+ @optional
+ @[@"日",@"一",@"二",@"三",@"四",@"五",@"六"];
+ 周一-周五 字体
+ */
+@property (nonatomic ,strong) UIFont *weekDayTitleTextFont;
 
 @end
 
