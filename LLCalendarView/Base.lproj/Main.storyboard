@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina6_1" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="设置日期数量" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Yar-6p-yir">
+                                <rect key="frame" x="50" y="164" width="137" height="40"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="68g-hf-zwO"/>
+                                </constraints>
+                                <nil key="textColor"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="lCQ-yr-4Zv">
+                                <rect key="frame" x="50" y="224" width="137" height="41"/>
+                                <segments>
+                                    <segment title="按天计算"/>
+                                    <segment title="按月计算"/>
+                                </segments>
+                            </segmentedControl>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="dph-ns-oJd">
+                                <rect key="frame" x="50" y="342" width="137" height="40"/>
+                                <state key="normal" title="开始"/>
+                            </button>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="Kl3-TE-Z9O">
+                                <rect key="frame" x="50" y="282" width="137" height="41"/>
+                                <segments>
+                                    <segment title="单选"/>
+                                    <segment title="双选"/>
+                                </segments>
+                            </segmentedControl>
+                        </subviews>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="Kl3-TE-Z9O" firstAttribute="top" secondItem="lCQ-yr-4Zv" secondAttribute="bottom" constant="18" id="Aps-ML-M5a"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="lCQ-yr-4Zv" secondAttribute="trailing" symbolic="YES" id="FG1-cm-qKM"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="Kl3-TE-Z9O" secondAttribute="trailing" symbolic="YES" id="LoI-Tb-v3g"/>
+                            <constraint firstItem="dph-ns-oJd" firstAttribute="top" secondItem="Kl3-TE-Z9O" secondAttribute="bottom" constant="20" id="Noy-8i-hJb"/>
+                            <constraint firstItem="lCQ-yr-4Zv" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="50" id="OCd-Zb-FNk"/>
+                            <constraint firstItem="dph-ns-oJd" firstAttribute="height" secondItem="Yar-6p-yir" secondAttribute="height" id="UdJ-8r-i39"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="dph-ns-oJd" secondAttribute="trailing" symbolic="YES" id="V7S-oB-ftj"/>
+                            <constraint firstItem="Yar-6p-yir" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="50" id="W5f-wi-Fgm"/>
+                            <constraint firstItem="Yar-6p-yir" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="120" id="Y7u-4b-9rx"/>
+                            <constraint firstItem="Kl3-TE-Z9O" firstAttribute="width" secondItem="Yar-6p-yir" secondAttribute="width" id="ZD3-JI-3bP"/>
+                            <constraint firstItem="dph-ns-oJd" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="50" id="azx-JZ-sS1"/>
+                            <constraint firstItem="dph-ns-oJd" firstAttribute="width" secondItem="Yar-6p-yir" secondAttribute="width" id="bv6-7z-hmZ"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="Yar-6p-yir" secondAttribute="trailing" symbolic="YES" id="fTs-HI-c4g"/>
+                            <constraint firstItem="Kl3-TE-Z9O" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="50" id="pNF-rn-aIw"/>
+                            <constraint firstItem="lCQ-yr-4Zv" firstAttribute="width" secondItem="Yar-6p-yir" secondAttribute="width" id="seN-9n-0yb"/>
+                            <constraint firstItem="Kl3-TE-Z9O" firstAttribute="height" secondItem="Yar-6p-yir" secondAttribute="height" id="vw3-vk-YZ6"/>
+                            <constraint firstItem="lCQ-yr-4Zv" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="50" id="xAJ-02-PSU"/>
+                            <constraint firstItem="lCQ-yr-4Zv" firstAttribute="top" secondItem="Yar-6p-yir" secondAttribute="bottom" constant="20" id="xjO-eH-Vq7"/>
+                            <constraint firstItem="lCQ-yr-4Zv" firstAttribute="height" secondItem="Yar-6p-yir" secondAttribute="height" id="zIR-MI-818"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                    </view>
+                    <connections>
+                        <outlet property="CalculateSegmentControl" destination="lCQ-yr-4Zv" id="UjC-wJ-sJr"/>
+                        <outlet property="DayCountTextField" destination="Yar-6p-yir" id="gnl-C8-btm"/>
+                        <outlet property="SelectTypeSegmentControl" destination="Kl3-TE-Z9O" id="9R1-hJ-57a"/>
+                        <outlet property="StartButton" destination="dph-ns-oJd" id="uMs-S3-8Ur"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="131.8840579710145" y="109.82142857142857"/>
+        </scene>
+    </scenes>
+</document>
