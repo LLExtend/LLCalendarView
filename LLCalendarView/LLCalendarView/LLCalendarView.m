@@ -10,8 +10,6 @@
 #import "LLCalendarDateHandle.h"
 #import "LLCalendarModel.h"
 
-#define kScreenWidth UIScreen.mainScreen.bounds.size.width
-#define kScreenHeight UIScreen.mainScreen.bounds.size.height
 #define kLayoutScale(layout) ((layout)*(UIScreen.mainScreen.bounds.size.width/375.0f))
 
 @interface LLCalendarMonthCollectionViewLayout : UICollectionViewFlowLayout
@@ -20,34 +18,32 @@
 
 @implementation LLCalendarMonthCollectionViewLayout
 
-- (instancetype)init {
-    self = [super init];
-    if (self) {
-
-        CGFloat minimumInteritemSpacing = 0.f;
-        CGFloat leftInset = 4.f;
-        CGFloat rightInset = 4.f;
-
-        CGFloat layoutWidth = (kScreenWidth - minimumInteritemSpacing * 6 - leftInset - rightInset);
-
-        CGFloat itemWidth = floor((layoutWidth / 7));
-        CGFloat itemHeight = kLayoutScale(60) ;
-
-        // 用来计算 layoutWidth / 7 无法除尽 造成误差问题
-        NSInteger collectionViewLayoutWidth = (int)itemWidth * 7;
-        // 计算得出误差 均分到leftInset、rightInset
-        CGFloat margin = (layoutWidth - collectionViewLayoutWidth) / 2;
-        leftInset += margin;
-        rightInset += margin;
-
-        self.headerReferenceSize = CGSizeMake(kScreenWidth, 40);
-        self.itemSize = CGSizeMake(itemWidth, itemHeight);
-        self.minimumLineSpacing = 4.0f;
-        self.minimumInteritemSpacing = minimumInteritemSpacing;
-        self.sectionInset = UIEdgeInsetsMake(0, leftInset, 0, rightInset);
-    }
-
-    return self;
+- (void)prepareLayout {
+    [super prepareLayout];
+    
+    CGFloat collectViewWidth = self.collectionView.frame.size.width;
+    
+    CGFloat minimumInteritemSpacing = 0.f;
+    CGFloat leftInset = 4.f;
+    CGFloat rightInset = 4.f;
+    
+    CGFloat layoutWidth = (collectViewWidth - minimumInteritemSpacing * 6 - leftInset - rightInset);
+    
+    CGFloat itemWidth = floor((layoutWidth / 7));
+    CGFloat itemHeight = itemWidth * 1.2;
+    
+    // 用来计算 layoutWidth / 7 无法除尽 造成误差问题
+    NSInteger collectionViewLayoutWidth = (int)itemWidth * 7;
+    // 计算得出误差 均分到leftInset、rightInset
+    CGFloat margin = (layoutWidth - collectionViewLayoutWidth) / 2;
+    leftInset += margin;
+    rightInset += margin;
+    
+    self.headerReferenceSize = CGSizeMake(collectViewWidth, 40);
+    self.itemSize = CGSizeMake(itemWidth, itemHeight);
+    self.minimumLineSpacing = 4.0f;
+    self.minimumInteritemSpacing = minimumInteritemSpacing;
+    self.sectionInset = UIEdgeInsetsMake(0, leftInset, 0, rightInset);
 }
 
 - (void)dealloc {
@@ -167,9 +163,9 @@
 
 - (void)setConfiguration:(LLCalendarViewConfiguration *)configuration
                 dayModel:(LLCalendarMonthModel *)monthModel {
-    _titleLabel.textColor = configuration.sectionMonthTextColor ?:[UIColor blackColor];
-    _titleLabel.backgroundColor = configuration.sectionMonthBackgroundColor ?:[UIColor groupTableViewBackgroundColor];
-    _titleLabel.font = configuration.sectionMonthTextFont ?:[UIFont systemFontOfSize:18];
+    _titleLabel.textColor = configuration.sectionHeaderConfiguration.sectionHeaderTextColor ?:[UIColor blackColor];
+    _titleLabel.backgroundColor = configuration.sectionHeaderConfiguration.sectionHeaderBackgroundColor ?:[UIColor groupTableViewBackgroundColor];
+    _titleLabel.font = configuration.sectionHeaderConfiguration.sectionHeaderTextFont ?:[UIFont systemFontOfSize:18];
     _titleLabel.text = [NSString stringWithFormat:@"%d年 %d月",(int)monthModel.year,(int)monthModel.month];
 }
 
@@ -190,39 +186,83 @@
 
 @implementation LLCalendarCollectionCell {
     UIView *_contentBackgroundView;
+    UILabel *_holidayLabel;
     UILabel *_titleLabel;
+    UILabel *_markLabel;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
+        
+        _contentBackgroundView = UIView.new;
+        [self.contentView addSubview:_contentBackgroundView];
+        
+        _holidayLabel = UILabel.new;
+        [_contentBackgroundView addSubview:_holidayLabel];
+        
         _titleLabel = [[UILabel alloc] init];
-        [_titleLabel setFont:[UIFont systemFontOfSize:15]];
-        [_titleLabel setBackgroundColor:[UIColor clearColor]];
-        [_titleLabel setTextAlignment:NSTextAlignmentCenter];
-        [self.contentView addSubview:_titleLabel];
-        [_titleLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
+        [_contentBackgroundView addSubview:_titleLabel];
+        
+        _markLabel = UILabel.new;
+        [_contentBackgroundView addSubview:_markLabel];
+        
+        _holidayLabel.font = [UIFont systemFontOfSize:10];
+        _holidayLabel.textColor = [UIColor colorWithRed:255/255.0 green:110/255.0 blue:0/255.0 alpha:1];
+        _holidayLabel.textAlignment = NSTextAlignmentCenter;
+        
+        _titleLabel.font = [UIFont boldSystemFontOfSize:16];
+        _titleLabel.textColor = [UIColor colorWithRed:51/255.0 green:51/255.0 blue:51/255.0 alpha:1];
+        _titleLabel.textAlignment = NSTextAlignmentCenter;
+        _titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+        
+        _markLabel.font = [UIFont systemFontOfSize:10];
+        _markLabel.textColor = [UIColor whiteColor];
+        _markLabel.textAlignment = NSTextAlignmentCenter;
+        _markLabel.hidden = YES;
+    
     }
     return self;
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    
+    NSMutableDictionary *attr = [NSMutableDictionary new];
+    attr[NSFontAttributeName] = _holidayLabel.font;
+    
+    CGRect rect = [@"" boundingRectWithSize:CGSizeMake(CGRectGetWidth(_contentBackgroundView.frame), HUGE)
+                                     options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading
+                                  attributes:attr context:nil];
+   
+    CGFloat height = rect.size.height;
+    
+    CGFloat scale = .4;
+    CGFloat titleHeight = CGRectGetHeight(self.frame) * scale;
+    CGFloat holidayHeight = CGRectGetHeight(self.frame) * ((1 - scale) / 2);
+    _contentBackgroundView.frame = self.bounds;
+    _holidayLabel.frame = CGRectMake(0, holidayHeight - height, CGRectGetWidth(_contentBackgroundView.frame), height);
+    _titleLabel.frame = CGRectMake(0, CGRectGetMaxY(_holidayLabel.frame), CGRectGetWidth(_contentBackgroundView.frame), titleHeight);
+    _markLabel.frame = CGRectMake(0, CGRectGetMaxY(_titleLabel.frame), CGRectGetWidth(_contentBackgroundView.frame), height);
 }
 
 - (void)setConfiguration:(LLCalendarViewConfiguration *)configuration
                 dayModel:(LLCalendarDayModel *)dayModel {
    
-    _titleLabel.textColor = configuration.weeknormalTextColor ?:UIColor.blackColor;
+    _titleLabel.textColor = configuration.weeknormalTextColor ?:[UIColor colorWithRed:51/255.0 green:51/255.0 blue:51/255.0 alpha:1];
     
     _titleLabel.text = [NSString stringWithFormat:@"%ld",(long)dayModel.day];
     
-    _titleLabel.font = configuration.weekDayTextFont ?:[UIFont systemFontOfSize:15];
+    _titleLabel.font = configuration.weekDayTextFont ?:[UIFont boldSystemFontOfSize:16];
     
     LLCalendarDayOfWeek dayOfWeek = dayModel.dayOfWeek;
     switch (dayOfWeek) {
         case LLCalendarDayOfWeekSunday:
             _titleLabel.textColor = configuration.weekendTextColor ?:UIColor.orangeColor;
-            _titleLabel.font = configuration.weekendTextFont ?:[UIFont systemFontOfSize:15];
+            _titleLabel.font = configuration.weekendTextFont ?:[UIFont boldSystemFontOfSize:16];
             break;
         case LLCalendarDayOfWeekSaturday:
             _titleLabel.textColor = configuration.weekendTextColor ?:UIColor.orangeColor;
-            _titleLabel.font = configuration.weekendTextFont ?:[UIFont systemFontOfSize:15];
+            _titleLabel.font = configuration.weekendTextFont ?:[UIFont boldSystemFontOfSize:16];
             break;
         case LLCalendarDayOfWeekUnknown:
             _titleLabel.text = @"";
@@ -245,49 +285,48 @@
     }
     
     [self setCornerRadius:0 masksToBounds:NO];
+    
+    _holidayLabel.textColor = [UIColor colorWithRed:255/255.0 green:110/255.0 blue:0/255.0 alpha:1];
+    _markLabel.hidden = YES;
+    
     switch (dayModel.dayState) {
         case LLCalendarDayStateUnable:
             _titleLabel.text = @"";
-            _titleLabel.backgroundColor = UIColor.whiteColor;
+            _contentBackgroundView.backgroundColor = UIColor.whiteColor;
             break;
         case LLCalendarDayStateUntouch:
+            _contentBackgroundView.backgroundColor = UIColor.whiteColor;
             _titleLabel.textColor = configuration.untouchTextColor ?:UIColor.lightGrayColor;
-            _titleLabel.backgroundColor = UIColor.whiteColor;
+            _holidayLabel.textColor = configuration.untouchTextColor ?:UIColor.lightGrayColor;
             break;
         case LLCalendarDayStateNormal:
-            _titleLabel.backgroundColor = UIColor.whiteColor;
+            _contentBackgroundView.backgroundColor = UIColor.whiteColor;
             break;
         case LLCalendarDayStateSelectStart:
-            _titleLabel.backgroundColor = configuration.selectedBackgroundColor ?:UIColor.blueColor;
+            _contentBackgroundView.backgroundColor = configuration.selectedBackgroundColor ?:UIColor.blueColor;
             _titleLabel.textColor = UIColor.whiteColor;
+            _holidayLabel.textColor = UIColor.whiteColor;
+            _markLabel.hidden = NO;
+            _markLabel.text = configuration.startMarkString;
             [self setCornerRadius:3 masksToBounds:YES];
             break;
         case LLCalendarDayStateSelectEnd:
-            _titleLabel.backgroundColor = configuration.selectedBackgroundColor ?:UIColor.blueColor;
+            _contentBackgroundView.backgroundColor = configuration.selectedBackgroundColor ?:UIColor.blueColor;
             _titleLabel.textColor = UIColor.whiteColor;
+            _holidayLabel.textColor = UIColor.whiteColor;
+            _markLabel.hidden = NO;
+            _markLabel.text = configuration.endMarkString;
             [self setCornerRadius:3 masksToBounds:YES];
             break;
         case LLCalendarDayStateSelect:
-            _titleLabel.backgroundColor = configuration.selectedMiddleBackgroundColor ?:UIColor.cyanColor;
+            _contentBackgroundView.backgroundColor = configuration.selectedMiddleBackgroundColor ?:UIColor.cyanColor;
             break;
-    }
-    
-    if (dayModel.dayState == LLCalendarDayStateSelectStart ||
-        dayModel.dayState == LLCalendarDayStateSelectEnd ||
-        dayModel.dayState == LLCalendarDayStateSelect) {
-        
     }
 }
 
 - (void)setCornerRadius:(CGFloat)cornerRadius masksToBounds:(BOOL)masksToBounds {
-    _titleLabel.layer.cornerRadius = cornerRadius;
-    _titleLabel.layer.masksToBounds = masksToBounds;
-}
-
-- (void)layoutSubviews {
-    [super layoutSubviews];
-    
-    _titleLabel.frame = self.bounds;
+    _contentBackgroundView.layer.cornerRadius = cornerRadius;
+    _contentBackgroundView.layer.masksToBounds = masksToBounds;
 }
 
 @end
@@ -318,7 +357,7 @@ static NSString const *endIndexPathKey = @"endIndexPathKey";
 
 - (void)layoutSubviews {
     [super layoutSubviews];
-    self.weekDayView.frame = CGRectMake(0, 0, kScreenWidth, kLayoutScale(35));
+    self.weekDayView.frame = CGRectMake(0, 0, self.frame.size.width, kLayoutScale(35));
     self.collectionView.frame = CGRectMake(0, CGRectGetMaxY(self.weekDayView.frame), self.frame.size.width, CGRectGetHeight(self.frame) - CGRectGetMaxY(self.weekDayView.frame));
 }
 
@@ -326,23 +365,8 @@ static NSString const *endIndexPathKey = @"endIndexPathKey";
     
     _recordIndexPaths = NSMutableDictionary.dictionary;
     
-    
     [self addSubview:self.weekDayView];
     
-    // 自定义布局
-    LLCalendarMonthCollectionViewLayout *layout = [LLCalendarMonthCollectionViewLayout new];
-
-    self.collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, CGRectGetMaxY(self.weekDayView.frame), self.frame.size.width, CGRectGetHeight(self.frame) - CGRectGetMaxY(self.weekDayView.frame)) collectionViewLayout:layout];
-    [self.collectionView registerClass:[LLCalendarCollectionCell class] forCellWithReuseIdentifier:@"LLCalendarCollectionCell"];
-
-    [self.collectionView registerClass:[LLCalendarMonthCollectionSectionHeader class] forSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:@"LLCalendarMonthCollectionSectionHeader"];
-
-    self.collectionView.delegate = self;
-    self.collectionView.dataSource = self;
-    self.collectionView.showsVerticalScrollIndicator = NO;
-
-    self.collectionView.backgroundColor = [UIColor whiteColor];
-
     [self addSubview:self.collectionView];
     
     //初始化后快速滑动闪退
@@ -438,12 +462,12 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         NSInteger addMonthCount = 0;
         NSDate *endDate = nil;
         
-        if (strongSelf.configuration.endCountType == LLEndCountTypeMonth) {
+        if (strongSelf.configuration.calculateRangeCountType == LLCalendarCalculateRangeCountTypeMonth) {
             // 按月计算
-            addMonthCount = strongSelf.configuration.endCount;
+            addMonthCount = strongSelf.configuration.calculateRangeCount-1;
         } else {
             // 按天计算
-            NSTimeInterval timeInterval = 3600 * 24 * (strongSelf.configuration.endCount - 1) ;
+            NSTimeInterval timeInterval = 3600 * 24 * (strongSelf.configuration.calculateRangeCount - 1) ;
             endDate = [startDate dateByAddingTimeInterval:timeInterval];
             NSDateComponents *endComponents = [calendar components:unitFlags fromDate:endDate];
             NSInteger startYear = components.year;
@@ -495,7 +519,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                 NSInteger compareStartResult = [LLCalendarDateHandle compareOriginDate:startDate compareDate:date];
                 NSInteger compareEndResult ;
                 LLCalendarDayState dayState ;
-                if (self.configuration.endCountType == LLEndCountTypeDay) {
+                if (self.configuration.calculateRangeCountType == LLCalendarCalculateRangeCountTypeDay) {
                     compareEndResult = [LLCalendarDateHandle compareOriginDate:endDate compareDate:date];
                     if (compareEndResult == 1 ||
                         compareStartResult == -1) {
@@ -685,6 +709,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 // weekDay subview 属性设置
 - (void)weekDayViewSubViewPropertySetting {
+    _weekDayView.backgroundColor = self.configuration.weekDayHeaderConfiguration.weekDayHeaderBackgroundColor ?:[UIColor colorWithRed:250/255.0f green:250/255.0f blue:250/255.0f alpha:1];
     __weak typeof(self) weakSelf = self;
     [self.weekDayView.subviews enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         __strong typeof(weakSelf) strongSelf = weakSelf;
@@ -693,11 +718,11 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             UILabel *label = (UILabel *)obj;
             if (idx == 0 ||
                 idx == 6) {
-                label.textColor = strongSelf.configuration.weekendTitleTextColor ?:[UIColor colorWithRed:51/255.0f green:51/255.0f blue:51/255.0f alpha:1];
-                label.font = strongSelf.configuration.weekendTitleTextFont ?:[UIFont systemFontOfSize:kLayoutScale(15)];
+                label.textColor = strongSelf.configuration.weekDayHeaderConfiguration.weekendHeaderTextColor ?:[UIColor colorWithRed:51/255.0f green:51/255.0f blue:51/255.0f alpha:1];
+                label.font = strongSelf.configuration.weekDayHeaderConfiguration.weekendHeaderTextFont ?:[UIFont systemFontOfSize:15];
             } else {
-                label.textColor = strongSelf.configuration.weekDayTitleTextColor ?:[UIColor colorWithRed:51/255.0f green:51/255.0f blue:51/255.0f alpha:1];
-                label.font = strongSelf.configuration.weekDayTitleTextFont ?:[UIFont systemFontOfSize:kLayoutScale(15)];
+                label.textColor = strongSelf.configuration.weekDayHeaderConfiguration.weekDayHeaderTextColor ?:[UIColor colorWithRed:51/255.0f green:51/255.0f blue:51/255.0f alpha:1];
+                label.font = strongSelf.configuration.weekDayHeaderConfiguration.weekDayHeaderTextFont ?:[UIFont systemFontOfSize:15];
             }
         }
     }];
@@ -722,7 +747,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if (!_weekDayView) {
         _weekDayView = UIView.new;
         _weekDayView.backgroundColor = [UIColor colorWithRed:250/255.0f green:250/255.0f blue:250/255.0f alpha:1];
-        _weekDayView.frame = CGRectMake(0, 0, UIScreen.mainScreen.bounds.size.width, kLayoutScale(35));
+        _weekDayView.frame = CGRectMake(0, 0, self.bounds.size.width, kLayoutScale(35));
         
         CGFloat labelW = CGRectGetWidth(_weekDayView.frame) / 7;
         CGFloat labelH = CGRectGetHeight(_weekDayView.frame);
@@ -731,13 +756,29 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             UILabel *label = UILabel.new;
             label.text = weeks[i];
             label.textColor = [UIColor colorWithRed:51/255.0f green:51/255.0f blue:51/255.0f alpha:1];
-            label.font = [UIFont systemFontOfSize:kLayoutScale(15)];
+            label.font = [UIFont systemFontOfSize:15];
             label.frame = CGRectMake(i * labelW, 0, labelW, labelH);
             label.textAlignment = NSTextAlignmentCenter;
             [_weekDayView addSubview:label];
         }
     }
     return _weekDayView;
+}
+
+- (UICollectionView *)collectionView {
+    if (!_collectionView) {
+        // 自定义布局
+        LLCalendarMonthCollectionViewLayout *layout = [LLCalendarMonthCollectionViewLayout new];
+        
+        _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, CGRectGetMaxY(self.weekDayView.frame), self.frame.size.width, CGRectGetHeight(self.frame) - CGRectGetMaxY(self.weekDayView.frame)) collectionViewLayout:layout];
+        [_collectionView registerClass:[LLCalendarCollectionCell class] forCellWithReuseIdentifier:@"LLCalendarCollectionCell"];
+        [_collectionView registerClass:[LLCalendarMonthCollectionSectionHeader class] forSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:@"LLCalendarMonthCollectionSectionHeader"];
+        _collectionView.delegate = self;
+        _collectionView.dataSource = self;
+        _collectionView.showsVerticalScrollIndicator = NO;
+        _collectionView.backgroundColor = [UIColor whiteColor];
+    }
+    return _collectionView;
 }
 
 @end

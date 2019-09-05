@@ -92,17 +92,17 @@
     NSComparisonResult result = [originDate compare:compareDate];
     switch (result) {
             
-            // compareDate 比 originDate 大
+        // compareDate 比 originDate 大
         case NSOrderedAscending:
             sort = 1;
             break;
             
-            // compareDate 比 originDate 小
+        // compareDate 比 originDate 小
         case NSOrderedDescending:
             sort = -1;
             break;
             
-            // compareDate = originDate
+        // compareDate = originDate
         case NSOrderedSame:
             sort = 0;
             break;

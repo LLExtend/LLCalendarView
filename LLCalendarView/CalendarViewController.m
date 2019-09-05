@@ -27,7 +27,7 @@
     [super viewDidLoad];
     
     self.view.backgroundColor = UIColor.whiteColor;
-    
+    self.title = @"日历";
     UIBarButtonItem *bar = [[UIBarButtonItem alloc] initWithTitle:@"关闭" style:UIBarButtonItemStylePlain target:self action:@selector(dismiss)];
     
     self.navigationItem.leftBarButtonItem = bar;
@@ -37,10 +37,17 @@
     [self.view addSubview:self.calendarView];
    
     self.calendarView.configuration = self.configuration;
+    
+    self.calendarView.finishSelectBlock = ^(NSArray<LLCalendarDayModel *> * _Nonnull selectedDates) {
+        NSLog(@"finishSelectBlock %@",selectedDates);
+    };
 }
 
 
 - (void)dismiss {
+    
+    NSLog(@"selectedDates %@",self.calendarView.selectedDates);
+    
     [self dismissViewControllerAnimated:YES completion:nil];
 }
 

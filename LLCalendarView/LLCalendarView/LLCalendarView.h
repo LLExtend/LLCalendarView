@@ -12,26 +12,66 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class LLCalendarDayModel;
 
-typedef NS_ENUM(NSInteger ,LLEndCountType) {
+typedef NS_ENUM(NSInteger ,LLCalendarCalculateRangeCountType) {
     // 按月计算
-    LLEndCountTypeMonth = 0 ,
+    LLCalendarCalculateRangeCountTypeMonth = 0 ,
     // 按天计算
-    LLEndCountTypeDay
+    LLCalendarCalculateRangeCountTypeDay
 };
+
+typedef struct {
+    //周六日 字体颜色
+    UIColor * _Nullable weekendHeaderTextColor;
+    //周一-周五 字体颜色
+    UIColor * _Nullable weekDayHeaderTextColor;
+    //周六日 字体
+    UIFont * _Nullable weekendHeaderTextFont;
+    //周一-周五 字体
+    UIFont * _Nullable weekDayHeaderTextFont;
+    //背景色
+    UIColor * _Nullable weekDayHeaderBackgroundColor;
+} LLCalendarWeekDayHeaderConfiguration;
+
+typedef struct {
+    UIColor * _Nullable sectionHeaderTextColor;
+    UIColor * _Nullable sectionHeaderBackgroundColor;
+    UIFont * _Nullable sectionHeaderTextFont;
+} LLCalendarSectionHeaderConfiguration;
+
+CG_INLINE LLCalendarWeekDayHeaderConfiguration
+LLCalendarWeekDayHeaderConfigurationMake(UIColor * _Nullable weekendHeaderTextColor, UIColor * _Nullable weekDayHeaderTextColor, UIFont * _Nullable weekendHeaderTextFont, UIFont * _Nullable weekDayHeaderTextFont)
+{
+    LLCalendarWeekDayHeaderConfiguration headerConfiguration;
+    headerConfiguration.weekendHeaderTextColor = weekendHeaderTextColor;
+    headerConfiguration.weekDayHeaderTextColor = weekDayHeaderTextColor;
+    headerConfiguration.weekendHeaderTextFont = weekendHeaderTextFont;
+    headerConfiguration.weekDayHeaderTextFont = weekDayHeaderTextFont;
+    return headerConfiguration;
+}
+
+CG_INLINE LLCalendarSectionHeaderConfiguration
+LLCalendarSectionHeaderConfigurationMake(UIColor * _Nullable sectionHeaderTextColor, UIColor * _Nullable sectionHeaderBackgroundColor, UIFont * _Nullable sectionHeaderTextFont)
+{
+    LLCalendarSectionHeaderConfiguration sectionHeaderConfiguration;
+    sectionHeaderConfiguration.sectionHeaderTextFont = sectionHeaderTextFont;
+    sectionHeaderConfiguration.sectionHeaderTextColor = sectionHeaderTextColor;
+    sectionHeaderConfiguration.sectionHeaderBackgroundColor = sectionHeaderBackgroundColor;
+    return sectionHeaderConfiguration;
+}
 
 @interface LLCalendarViewConfiguration : NSObject
 
 /**
  @required
- 日历结束日期数量
+ 计算日期范围数量
  */
-@property (nonatomic ,assign) NSInteger endCount;
+@property (nonatomic ,assign) NSInteger calculateRangeCount;
 
 /**
  @required
- 结束日期计算方式
+ 日历日期范围计算方式
  */
-@property (nonatomic ,assign) LLEndCountType endCountType;
+@property (nonatomic ,assign) LLCalendarCalculateRangeCountType calculateRangeCountType;
 
 /**
  @optional
@@ -87,53 +127,23 @@ typedef NS_ENUM(NSInteger ,LLEndCountType) {
  */
 @property (nonatomic ,strong) UIFont *weekDayTextFont;
 
-/************************ 👉section View 属性设置👈 ************************/
 /**
  @optional
- 悬停section View 字体颜色
+ 开始日期标记文案
  */
-@property (nonatomic ,strong) UIColor *sectionMonthTextColor;
+@property (nonatomic ,copy) NSString *startMarkString;
 
 /**
  @optional
- 悬停section View 背景颜色
+ 结束日期标记文案
  */
-@property (nonatomic ,strong) UIColor *sectionMonthBackgroundColor;
+@property (nonatomic ,copy) NSString *endMarkString;
 
-/**
- @optional
- 悬停section View 字体
- */
-@property (nonatomic ,strong) UIFont *sectionMonthTextFont;
+/************************ 👉Calendar Section Header 属性设置👈 ************************/
+@property (nonatomic ,assign) LLCalendarSectionHeaderConfiguration sectionHeaderConfiguration;
 
-/************************ 👉weekDayView 属性设置👈 ************************/
-/**
- @optional
- @[@"日",@"一",@"二",@"三",@"四",@"五",@"六"];
- 周六日 字体颜色
- */
-@property (nonatomic ,strong) UIColor *weekendTitleTextColor;
-
-/**
- @optional
- @[@"日",@"一",@"二",@"三",@"四",@"五",@"六"];
- 周一-周五 字体颜色
- */
-@property (nonatomic ,strong) UIColor *weekDayTitleTextColor;
-
-/**
- @optional
- @[@"日",@"一",@"二",@"三",@"四",@"五",@"六"];
- 周六日 字体
- */
-@property (nonatomic ,strong) UIFont *weekendTitleTextFont;
-
-/**
- @optional
- @[@"日",@"一",@"二",@"三",@"四",@"五",@"六"];
- 周一-周五 字体
- */
-@property (nonatomic ,strong) UIFont *weekDayTitleTextFont;
+/************************ 👉CalendarWeekDayHeader 属性设置👈 ************************/
+@property (nonatomic ,assign) LLCalendarWeekDayHeaderConfiguration weekDayHeaderConfiguration;
 
 @end
 
