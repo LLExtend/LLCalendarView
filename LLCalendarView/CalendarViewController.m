@@ -43,7 +43,6 @@
     };
 }
 
-
 - (void)dismiss {
     
     NSLog(@"selectedDates %@",self.calendarView.selectedDates);

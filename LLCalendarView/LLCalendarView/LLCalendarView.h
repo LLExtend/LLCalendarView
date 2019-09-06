@@ -19,6 +19,13 @@ typedef NS_ENUM(NSInteger ,LLCalendarCalculateRangeCountType) {
     LLCalendarCalculateRangeCountTypeDay
 };
 
+typedef NS_ENUM(NSInteger ,LLCalendarFillRangeType) {
+    // 超出日期范围 任意值 回显设置无效
+    LLCalendarFillRangeTypeAnyDateOutInvalid = 0,
+    // 超出日期范围 任意值 填充当前比较日期
+    LLCalendarFillRangeTypeAnyDateOutFillBase
+};
+
 typedef struct {
     //周六日 字体颜色
     UIColor * _Nullable weekendHeaderTextColor;
@@ -37,6 +44,11 @@ typedef struct {
     UIColor * _Nullable sectionHeaderBackgroundColor;
     UIFont * _Nullable sectionHeaderTextFont;
 } LLCalendarSectionHeaderConfiguration;
+
+typedef struct {
+    NSDate * _Nullable startDate;
+    NSDate * _Nullable endDate;
+} LLCalendarDateFillConfiguration;
 
 CG_INLINE LLCalendarWeekDayHeaderConfiguration
 LLCalendarWeekDayHeaderConfigurationMake(UIColor * _Nullable weekendHeaderTextColor, UIColor * _Nullable weekDayHeaderTextColor, UIFont * _Nullable weekendHeaderTextFont, UIFont * _Nullable weekDayHeaderTextFont)
@@ -57,6 +69,15 @@ LLCalendarSectionHeaderConfigurationMake(UIColor * _Nullable sectionHeaderTextCo
     sectionHeaderConfiguration.sectionHeaderTextColor = sectionHeaderTextColor;
     sectionHeaderConfiguration.sectionHeaderBackgroundColor = sectionHeaderBackgroundColor;
     return sectionHeaderConfiguration;
+}
+
+CG_INLINE LLCalendarDateFillConfiguration
+LLCalendarDateFillConfigurationMake(NSDate * _Nullable startDate, NSDate * _Nullable endDate)
+{
+    LLCalendarDateFillConfiguration fillConfiguration;
+    fillConfiguration.startDate = startDate;
+    fillConfiguration.endDate = endDate;
+    return fillConfiguration;
 }
 
 @interface LLCalendarViewConfiguration : NSObject
@@ -138,6 +159,18 @@ LLCalendarSectionHeaderConfigurationMake(UIColor * _Nullable sectionHeaderTextCo
  结束日期标记文案
  */
 @property (nonatomic ,copy) NSString *endMarkString;
+
+/**
+ @optional
+ 日期范围数据回显配置
+ */
+@property (nonatomic ,assign) LLCalendarDateFillConfiguration dateFillConfiguration;
+
+/**
+ @optional
+ 日期范围数据回显类型
+ */
+@property (nonatomic ,assign) LLCalendarFillRangeType fillRangeType;
 
 /************************ 👉Calendar Section Header 属性设置👈 ************************/
 @property (nonatomic ,assign) LLCalendarSectionHeaderConfiguration sectionHeaderConfiguration;

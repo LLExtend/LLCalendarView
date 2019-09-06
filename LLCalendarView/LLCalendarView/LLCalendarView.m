@@ -43,7 +43,7 @@
     self.itemSize = CGSizeMake(itemWidth, itemHeight);
     self.minimumLineSpacing = 4.0f;
     self.minimumInteritemSpacing = minimumInteritemSpacing;
-    self.sectionInset = UIEdgeInsetsMake(0, leftInset, 0, rightInset);
+    self.sectionInset = UIEdgeInsetsMake(0, leftInset, 4, rightInset);
 }
 
 - (void)dealloc {
@@ -334,6 +334,12 @@
 static NSString const *startIndexPathKey = @"startIndexPathKey";
 static NSString const *endIndexPathKey = @"endIndexPathKey";
 
+
+typedef struct {
+    NSDate *startDate;
+    NSDate *endDate;
+} LLCalendarDateAllowSelectRange;
+
 @interface LLCalendarView () <UICollectionViewDelegate ,UICollectionViewDataSource>
 @property (nonatomic ,strong) UIView *weekDayView;
 @property (nonatomic ,strong) UICollectionView *collectionView;
@@ -396,6 +402,11 @@ static NSString const *endIndexPathKey = @"endIndexPathKey";
     LLCalendarCollectionCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"LLCalendarCollectionCell" forIndexPath:indexPath];
     LLCalendarDayModel *dayModel = [self dayModelForIndexPath:indexPath];
     [cell setConfiguration:self.configuration dayModel:dayModel];
+    if (dayModel.dayState == LLCalendarDayStateSelectStart) {
+        _recordIndexPaths[startIndexPathKey] = indexPath;
+    } else if (dayModel.dayState == LLCalendarDayStateSelectEnd) {
+        _recordIndexPaths[endIndexPathKey] = indexPath;
+    }
     return cell;
 }
 
@@ -432,8 +443,15 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 }
 
 - (void)setConfiguration:(LLCalendarViewConfiguration *)configuration {
+//    LLCalendarDateFillConfiguration fill;
+//    fill.startDate = [LLCalendarDateHandle dateWithYear:2019 month:9 day:12];
+//    fill.endDate = [LLCalendarDateHandle dateWithYear:2020 month:3 day:1];
+//    configuration.dateFillConfiguration = fill;
+//    configuration.fillRangeType = LLCalendarFillRangeTypeAnyDateOutInvalid;
+    
     _configuration = configuration;
     
+
     [self dataSourceProcessor];
     
     [self weekDayViewSubViewPropertySetting];
@@ -461,6 +479,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         
         NSInteger addMonthCount = 0;
         NSDate *endDate = nil;
+        
+        BOOL isAllowFill = [self isAllowFill:startDate components:components];
         
         if (strongSelf.configuration.calculateRangeCountType == LLCalendarCalculateRangeCountTypeMonth) {
             // 按月计算
@@ -531,6 +551,18 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                     dayState = (compareStartResult == -1 ? LLCalendarDayStateUntouch : LLCalendarDayStateNormal);
                 }
                 
+                // 回显数据处理
+                if (isAllowFill) {
+                    dayState = [strongSelf fillProcessor:date dayState:dayState];
+                    /*
+                     🌟
+                     indexPath
+                     section == months.count
+                     row == dayModels.count
+                     🌟
+                     */
+                }
+                
                 LLCalendarDayModel *dayModel = LLCalendarDayModel.new;
                 dayModel.year = monthModel.year;
                 dayModel.month = monthModel.month;
@@ -556,9 +588,96 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         
         dispatch_async(dispatch_get_main_queue(), ^{
             [strongSelf.collectionView reloadData];
-            [strongSelf.collectionView.collectionViewLayout invalidateLayout];
+//            [strongSelf.collectionView.collectionViewLayout invalidateLayout];
         });
     });
+}
+
+// 是否允许回显日期范围
+- (BOOL)isAllowFill:(NSDate *)today components:(NSDateComponents *)components {
+    NSDate *startDate = _configuration.dateFillConfiguration.startDate;
+    NSInteger compareStartResult = [LLCalendarDateHandle compareOriginDate:today compareDate:startDate];
+    if (compareStartResult == -1) {
+        if (_configuration.fillRangeType == LLCalendarFillRangeTypeAnyDateOutFillBase) {
+            _configuration.dateFillConfiguration = LLCalendarDateFillConfigurationMake(today, _configuration.dateFillConfiguration.endDate);
+        } else {
+            return NO;
+        }
+    }
+    
+    NSDate *fillEndDate = _configuration.dateFillConfiguration.endDate;
+    if (_configuration.calculateRangeCountType == LLCalendarCalculateRangeCountTypeDay) {
+        NSTimeInterval timeInterval = 3600 * 24 * (_configuration.calculateRangeCount - 1) ;
+        NSDate *endDate = [today dateByAddingTimeInterval:timeInterval];
+        NSInteger compareEndResult = [LLCalendarDateHandle compareOriginDate:fillEndDate compareDate:endDate];
+        if (compareEndResult == -1) {
+            if (_configuration.fillRangeType == LLCalendarFillRangeTypeAnyDateOutFillBase) {
+                _configuration.dateFillConfiguration = LLCalendarDateFillConfigurationMake(_configuration.dateFillConfiguration.startDate, endDate);
+            } else {
+                return NO;
+            }
+        }
+    } else {
+        NSInteger calculateRangeCount = _configuration.calculateRangeCount - 1;
+        NSInteger year = components.year;
+        NSInteger month = components.month;
+        NSInteger addMonth = (month + calculateRangeCount);
+        
+        NSInteger endMonth = addMonth % 12;
+        NSInteger endYear = addMonth / 12;
+        endYear += year;
+        
+        // 获取结束年月 当前月份天数
+        NSInteger endDay = [LLCalendarDateHandle totaldaysInMonth:[LLCalendarDateHandle dateWithYear:endYear month:endMonth day:1]];
+        
+        NSDate *endDate = [LLCalendarDateHandle dateWithYear:endYear month:endMonth day:endDay];
+        NSInteger compareEndResult = [LLCalendarDateHandle compareOriginDate:fillEndDate compareDate:endDate];
+        if (compareEndResult == -1) {
+            if (_configuration.fillRangeType == LLCalendarFillRangeTypeAnyDateOutFillBase) {
+                _configuration.dateFillConfiguration = LLCalendarDateFillConfigurationMake(_configuration.dateFillConfiguration.startDate, endDate);
+            } else {
+                return NO;
+            }
+        }
+    }
+
+    return YES;
+}
+
+- (LLCalendarDayState)fillProcessor:(NSDate *)date dayState:(LLCalendarDayState)dayState {
+    
+    NSDate *startDate = _configuration.dateFillConfiguration.startDate;
+    // 单选回显
+    if (_configuration.isOpenSingleSelect) {
+        if (startDate) {
+            NSInteger compareStartResult = [LLCalendarDateHandle compareOriginDate:startDate compareDate:date];
+            if (compareStartResult == 0) {
+                dayState = LLCalendarDayStateSelectStart;
+                _isAlreadyExistStart = YES;
+            }
+        }
+    } else {
+        NSDate *endDate = _configuration.dateFillConfiguration.endDate;
+        // 双选回显
+        if (startDate && endDate) {
+            NSInteger compareStartResult = [LLCalendarDateHandle compareOriginDate:startDate compareDate:date];
+            NSInteger compareEndResult = [LLCalendarDateHandle compareOriginDate:endDate compareDate:date];
+            
+        
+            if (compareEndResult == -1 &&
+                compareStartResult == 1) {
+                dayState = LLCalendarDayStateSelect;
+            } else if (compareStartResult == 0) {
+                dayState = LLCalendarDayStateSelectStart;
+                _isAlreadyExistStart = YES;
+            } else if (compareEndResult == 0) {
+                dayState = LLCalendarDayStateSelectEnd;
+                _isAlreadyExistEnd = YES;
+            }
+        }
+    }
+    
+    return dayState;
 }
 
 // 单次选择处理

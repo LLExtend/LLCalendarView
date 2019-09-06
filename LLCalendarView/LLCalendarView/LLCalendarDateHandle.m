@@ -85,7 +85,7 @@
  
  @param originDate 原始日期
  @param compareDate 比对日期
- @return 1|compareDate 比 originDate 大 、 0|compareDate = originDate -1 、-1|compareDate 比 originDate 小
+ @return 1|compareDate 比 originDate 大 、 0|compareDate = originDate 、-1|compareDate 比 originDate 小
  */
 + (NSInteger)compareOriginDate:(NSDate *)originDate compareDate:(NSDate *)compareDate {
     NSInteger sort = 0;
